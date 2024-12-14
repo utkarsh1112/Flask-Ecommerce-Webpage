@@ -5,46 +5,46 @@ from werkzeug.utils import secure_filename
 from .models import Product, Order, Customer
 from . import db
 
-
+# Create a Blueprint for admin-related routes
 admin = Blueprint('admin', __name__)
 
-
+# Route to serve media files (e.g., images)
 @admin.route('/media/<path:filename>')
 def get_image(filename):
     return send_from_directory('../media', filename)
 
-
+# Route to add shop items (admin-only access)
 @admin.route('/add-shop-items', methods=['GET', 'POST'])
-@login_required
+@login_required  # Ensure user is logged in
 def add_shop_items():
-    if current_user.id == 1:
+    if current_user.id == 1:  # Check if user is an admin
         form = ShopItemsForm()
 
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # Process form submission
+            # Retrieve form data
             product_name = form.product_name.data
             current_price = form.current_price.data
             previous_price = form.previous_price.data
             in_stock = form.in_stock.data
             flash_sale = form.flash_sale.data
 
+            # Handle file upload securely
             file = form.product_picture.data
-
             file_name = secure_filename(file.filename)
-
             file_path = f'./media/{file_name}'
+            file.save(file_path)  # Save the uploaded file
 
-            file.save(file_path)
-
+            # Create a new Product instance
             new_shop_item = Product()
             new_shop_item.product_name = product_name
             new_shop_item.current_price = current_price
             new_shop_item.previous_price = previous_price
             new_shop_item.in_stock = in_stock
             new_shop_item.flash_sale = flash_sale
-
             new_shop_item.product_picture = file_path
 
             try:
+                # Add the product to the database
                 db.session.add(new_shop_item)
                 db.session.commit()
                 flash(f'{product_name} added Successfully')
@@ -56,47 +56,49 @@ def add_shop_items():
 
         return render_template('add_shop_items.html', form=form)
 
-    return render_template('404.html')
+    return render_template('404.html')  # Return 404 if not admin
 
-
+# Route to display all shop items (admin-only access)
 @admin.route('/shop-items', methods=['GET', 'POST'])
 @login_required
 def shop_items():
-    if current_user.id == 1:
-        items = Product.query.order_by(Product.date_added).all()
+    if current_user.id == 1:  # Check if user is an admin
+        items = Product.query.order_by(Product.date_added).all()  # Fetch all products
         return render_template('shop_items.html', items=items)
     return render_template('404.html')
 
-
+# Route to update a specific shop item (admin-only access)
 @admin.route('/update-item/<int:item_id>', methods=['GET', 'POST'])
 @login_required
 def update_item(item_id):
-    if current_user.id == 1:
+    if current_user.id == 1:  # Check if user is an admin
         form = ShopItemsForm()
 
-        item_to_update = Product.query.get(item_id)
+        item_to_update = Product.query.get(item_id)  # Fetch the product to update
 
+        # Populate form placeholders with current values
         form.product_name.render_kw = {'placeholder': item_to_update.product_name}
         form.previous_price.render_kw = {'placeholder': item_to_update.previous_price}
         form.current_price.render_kw = {'placeholder': item_to_update.current_price}
         form.in_stock.render_kw = {'placeholder': item_to_update.in_stock}
         form.flash_sale.render_kw = {'placeholder': item_to_update.flash_sale}
 
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # Process form submission
+            # Update product attributes
             product_name = form.product_name.data
             current_price = form.current_price.data
             previous_price = form.previous_price.data
             in_stock = form.in_stock.data
             flash_sale = form.flash_sale.data
 
+            # Handle file upload securely
             file = form.product_picture.data
-
             file_name = secure_filename(file.filename)
             file_path = f'./media/{file_name}'
-
             file.save(file_path)
 
             try:
+                # Update the product in the database
                 Product.query.filter_by(id=item_id).update(dict(product_name=product_name,
                                                                 current_price=current_price,
                                                                 previous_price=previous_price,
@@ -106,21 +108,22 @@ def update_item(item_id):
 
                 db.session.commit()
                 flash(f'{product_name} updated Successfully')
-                print('Product Upadted')
+                print('Product Updated')
                 return redirect('/shop-items')
             except Exception as e:
-                print('Product not Upated', e)
+                print('Product not Updated', e)
                 flash('Item Not Updated!!!')
 
         return render_template('update_item.html', form=form)
     return render_template('404.html')
 
-
+# Route to delete a shop item (admin-only access)
 @admin.route('/delete-item/<int:item_id>', methods=['GET', 'POST'])
 @login_required
 def delete_item(item_id):
-    if current_user.id == 1:
+    if current_user.id == 1:  # Check if user is an admin
         try:
+            # Delete the product from the database
             item_to_delete = Product.query.get(item_id)
             db.session.delete(item_to_delete)
             db.session.commit()
@@ -133,25 +136,26 @@ def delete_item(item_id):
 
     return render_template('404.html')
 
-
+# Route to display customer orders (admin-only access)
 @admin.route('/view-orders')
 @login_required
 def order_view():
-    if current_user.id == 1:
-        orders = Order.query.all()
+    if current_user.id == 1:  # Check if user is an admin
+        orders = Order.query.all()  # Fetch all orders
         return render_template('view_orders.html', orders=orders)
     return render_template('404.html')
 
-
+# Route to update an order (admin-only access)
 @admin.route('/update-order/<int:order_id>', methods=['GET', 'POST'])
 @login_required
 def update_order(order_id):
-    if current_user.id == 1:
+    if current_user.id == 1:  # Check if user is an admin
         form = OrderForm()
 
-        order = Order.query.get(order_id)
+        order = Order.query.get(order_id)  # Fetch the order to update
 
-        if form.validate_on_submit():
+        if form.validate_on_submit():  # Process form submission
+            # Update order status
             status = form.order_status.data
             order.status = status
 
@@ -168,20 +172,19 @@ def update_order(order_id):
 
     return render_template('404.html')
 
-
+# Route to display all customers (admin-only access)
 @admin.route('/customers')
 @login_required
 def display_customers():
-    if current_user.id == 1:
-        customers = Customer.query.all()
+    if current_user.id == 1:  # Check if user is an admin
+        customers = Customer.query.all()  # Fetch all customers
         return render_template('customers.html', customers=customers)
     return render_template('404.html')
 
-
+# Route to display the admin dashboard (admin-only access)
 @admin.route('/admin-page')
 @login_required
 def admin_page():
-    if current_user.id == 1:
+    if current_user.id == 1:  # Check if user is an admin
         return render_template('admin.html')
     return render_template('404.html')
-
