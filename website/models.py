@@ -3,33 +3,44 @@ from flask_login import UserMixin
 from datetime import datetime
 from werkzeug.security import generate_password_hash, check_password_hash
 
-
+# Define the Customer model, representing a user in the application
 class Customer(db.Model, UserMixin):
+        """
+    Model for a customer in the application. Includes login functionality and
+    relationships to carts and orders.
+    """
     id = db.Column(db.Integer, primary_key=True)
     email = db.Column(db.String(100), unique=True)
     username = db.Column(db.String(100))
     password_hash = db.Column(db.String(150))
     date_joined = db.Column(db.DateTime(), default=datetime.utcnow)
 
-    cart_items = db.relationship('Cart', backref=db.backref('customer', lazy=True))
-    orders = db.relationship('Order', backref=db.backref('customer', lazy=True))
+    cart_items = db.relationship('Cart', backref=db.backref('customer', lazy=True))    # Link to Cart model
+    orders = db.relationship('Order', backref=db.backref('customer', lazy=True))       # Link to Order model
 
     @property
+    #Prevent direct access to the password attribute.
     def password(self):
         raise AttributeError('Password is not a readable Attribute')
 
     @password.setter
+    #Automatically hash the password when setting it.
     def password(self, password):
         self.password_hash = generate_password_hash(password=password)
 
+    #Verify the hashed password against the input password.
     def verify_password(self, password):
         return check_password_hash(self.password_hash, password=password)
 
+    #String representation of the Customer object.
     def __str__(self):
         return '<Customer %r>' % Customer.id
 
 
 class Product(db.Model):
+    """
+    Model for a product in the shop. Tracks product details, pricing, and availability.
+    """
     id = db.Column(db.Integer, primary_key=True)
     product_name = db.Column(db.String(100), nullable=False)
     current_price = db.Column(db.Float, nullable=False)
@@ -47,6 +58,9 @@ class Product(db.Model):
 
 
 class Cart(db.Model):
+    """
+    Model for items in a customer's cart. Links customers to products with a quantity.
+    """
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
 
@@ -60,6 +74,9 @@ class Cart(db.Model):
 
 
 class Order(db.Model):
+    """
+    Model for customer orders. Tracks order details, status, and payment information.
+    """
     id = db.Column(db.Integer, primary_key=True)
     quantity = db.Column(db.Integer, nullable=False)
     price = db.Column(db.Float, nullable=False)
@@ -71,6 +88,7 @@ class Order(db.Model):
 
     # customer
 
+    #Function for string representation of the Order object.
     def __str__(self):
         return '<Order %r>' % self.id
 
