@@ -2,13 +2,13 @@
 
 🐍Python Project🐍
 
-📌Customers can sign in or sign up
-📌Customers can reset their passwords
-📌Customers can search for goods
-📌Add them to their cart
-📌Payment Gateway Functionality
-📌Admins can regulate shop products e.g stock level
-📌Admins can change order status
+1. Customers can sign in or sign up
+2.Customers can reset their passwords
+3.Customers can search for goods
+4.Add them to their cart
+5.Payment Gateway Functionality
+6.Admins can regulate shop products e.g stock level
+7.Admins can change order status
 
 
 OVERVIEW
