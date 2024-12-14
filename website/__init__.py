@@ -23,14 +23,16 @@ def create_app():
     def page_not_found(error):
         return render_template('404.html')
 
-    login_manager = LoginManager()
-    login_manager.init_app(app)
-    login_manager.login_view = 'auth.login'
+    # Login Manager Setup
+    lm = LoginManager()       #variable named login manager
+    lm.init_app(app)
+    lm.login_view = 'auth.login'
 
-    @login_manager.user_loader
+    @lm.user_loader
     def load_user(id):
         return Customer.query.get(int(id))
 
+    # Import Blueprints and Models
     from .views import views
     from .auth import auth
     from .admin import admin
